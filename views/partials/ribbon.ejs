@@ -1,0 +1,215 @@
+<style>
+    main {
+        padding-top: 30px;
+    }
+
+    header.ribbon {
+        background-color: #333;
+        color: white;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 1000;
+        height: 30px; /* Keeps the height as 5% of viewport height */
+        display: flex;
+        align-items: center; /* Centers items vertically within the ribbon */
+    }
+
+    .ribbon-menu {
+        display: flex;
+        justify-content: left;
+        width: 100%; /* Ensures the menu stretches across the ribbon */
+    }
+
+    .ribbon-menu ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+    }
+
+    .ribbon-menu li {
+        position: relative;
+    }
+
+    .ribbon-menu a {
+        color: white;
+        text-decoration: none;
+        padding: 0 15px; /* Adjust horizontal padding */
+        display: flex;
+        align-items: center; /* Vertically centers text */
+        height: 100%; /* Ensures anchor tag takes full height of the ribbon */
+        font-size: 1.2rem; /* Adjust the font size as needed */
+    }
+
+    .ribbon-menu .dropdown {
+        display: none;
+        position: absolute;
+        background-color: #444;
+        top: 100%;
+        left: 0;
+        min-width: 150px;
+        border-radius: 4px;
+        box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .ribbon-menu .dropdown li {
+        border-bottom: 1px solid #555;
+        padding: 0 10px; /* Add padding to the li element for spacing */
+        display: flex;
+        justify-content: space-between; /* Space out the text and shortcut */
+    }
+
+    .ribbon-menu .dropdown li:last-child {
+        border-bottom: none;
+    }
+
+    .ribbon-menu .dropdown a {
+        padding: 10px 0; /* Adjust padding to fit the new layout */
+        flex-grow: 1; /* Make the text take up available space */
+    }
+
+    .ribbon-menu .dropdown span.shortcut {
+        color: #bbb; /* Lighter color for the shortcut text */
+        font-size: 0.8rem; /* Smaller font size for the shortcuts */
+        margin-left: 10px; /* Adds space between text and shortcut */
+        white-space: nowrap; /* Prevents wrapping of shortcut text */
+    }
+
+    a:hover {
+        cursor: pointer;
+    }
+
+    .ribbon-menu li:hover .dropdown {
+        display: block;
+    }
+</style>
+
+<header class="ribbon">
+    <nav class="ribbon-menu">
+        <ul>
+            <li><a id="file-menu">File</a>
+                <ul class="dropdown">
+                    <li><a id="open-folder">Open Folder</a><span class="shortcut">Ctrl+Shift+O</span></li>
+                    <li><a id="settings">Settings</a><span class="shortcut">Ctrl+I</span></li>
+                </ul>
+            </li>
+            <li><a id="edit-menu">Edit</a>
+                <ul class="dropdown">
+                    <li><a id="select-all">Select All</a><span class="shortcut">Ctrl+A</span></li>
+                </ul>
+            </li>
+            <li><a id="view-menu">View</a></li>
+        </ul>
+    </nav>
+</header>
+
+<script>
+    // Function to make a window draggable
+    function makeDraggable(element) {
+        const titleBar = element.querySelector('.title-bar');
+        let isDragging = false;
+        let offsetX, offsetY;
+    
+        titleBar.addEventListener('mousedown', (event) => {
+            isDragging = true;
+            offsetX = event.clientX - element.getBoundingClientRect().left;
+            offsetY = event.clientY - element.getBoundingClientRect().top;
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                document.removeEventListener('mousemove', onMouseMove);
+            });
+        });
+    
+        function onMouseMove(event) {
+            if (isDragging) {
+                const x = event.clientX - offsetX;
+                const y = event.clientY - offsetY;
+                const windowWidth = element.offsetWidth;
+                const windowHeight = element.offsetHeight;
+    
+                // Ensure the window doesn't go out of bounds
+                const maxX = window.innerWidth - windowWidth;
+                const maxY = window.innerHeight - windowHeight;
+    
+                element.style.left = `${Math.max(0, Math.min(x, maxX))}px`;
+                element.style.top = `${Math.max(0, Math.min(y, maxY))}px`;
+            }
+        }
+    }
+    
+    // Function to dynamically load and display the settings window
+    function openSettings() {
+        // Fetch the settings window content from the server
+        fetch('/settings-window')
+            .then(response => response.text())
+            .then(html => {
+                // Create a new window element
+                const newWindow = document.createElement('div');
+                newWindow.innerHTML = html;
+                document.body.appendChild(newWindow);
+                
+                // Make the new window draggable
+                makeDraggable(newWindow.querySelector('.window'));
+                
+                // Add functionality to the close button
+                const closeButton = newWindow.querySelector('.control');
+                if (closeButton) {
+                    closeButton.addEventListener('click', () => {
+                        newWindow.remove();
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading settings window:', error));
+    }
+    
+    // Existing functions and event listeners
+    const shortcuts = [
+        {
+            keys: [17, 16, 79], // Ctrl (17) + Shift (16) + O (79)
+            id: 'open-folder',
+            action: openFolder
+        },
+        {
+            keys: [17, 73], // Ctrl (17) + I (73)
+            id: 'settings',
+            action: openSettings
+        },
+        {
+            keys: [17, 65], // Ctrl (17) + A (65)
+            id: 'select-all',
+            action: selectAll
+        }
+    ];
+    
+    // Example functions that will be triggered by the shortcuts
+    function openFolder() {
+        alert('Open Folder triggered by shortcut or click!');
+    }
+    
+    function selectAll() {
+        alert('Select All triggered by shortcut or click!');
+    }
+    
+    // Keydown event listener to detect shortcuts
+    document.addEventListener('keydown', (event) => {
+        const pressedKeys = [];
+        if (event.ctrlKey) pressedKeys.push(17); // Ctrl
+        if (event.shiftKey) pressedKeys.push(16); // Shift
+        if (event.altKey) pressedKeys.push(18); // Alt
+        if (event.key) pressedKeys.push(event.keyCode); // Other keys
+    
+        shortcuts.forEach(shortcut => {
+            if (JSON.stringify(shortcut.keys) === JSON.stringify(pressedKeys)) {
+                event.preventDefault(); // Prevent default browser action
+                shortcut.action(); // Trigger the associated action
+            }
+        });
+    });
+    
+    // Link ribbon buttons to the functions
+    document.getElementById('open-folder').onclick = openFolder;
+    document.getElementById('settings').onclick = openSettings;
+    document.getElementById('select-all').onclick = selectAll;
+    </script>

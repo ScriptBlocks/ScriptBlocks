@@ -30,6 +30,16 @@ const startServer = async () => {
         res.render('index'); // Ensure index.ejs exists in the 'views' folder
     });
 
+    app.get('/settings-window', (req, res) => {
+        res.render('partials/window', {
+            filename: 'settings.ejs',
+            windowName: 'Settings',
+            width: 450,
+            height: 500,
+            resizable: true
+        });
+    });
+
     server.listen(port, () => {
         console.log(`Server is running on http://localhost:${port}`);
     });

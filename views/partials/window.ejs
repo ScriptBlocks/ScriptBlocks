@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= windowName %></title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .window {
+            position: absolute;
+            top: 0;
+            left: 0; /* Positioned at the top-left corner */
+            width: <%= width %>px;
+            height: <%= height %>px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+            z-index: 2147483647; /* Very high z-index to ensure it's above everything */
+            overflow: hidden; /* Ensures the content does not overflow */
+            resize: <%= resizable ? 'both' : 'none' %>;
+        }
+
+        .title-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #e1e1e1;
+            border-bottom: 1px solid #ccc;
+            padding: 8px;
+            font-size: 14px;
+            color: #333;
+            cursor: move; /* Indicates the element is draggable */
+        }
+
+        .title-bar .title {
+            font-weight: bold;
+        }
+
+        .title-bar .control {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #ff5f57;
+            cursor: pointer;
+        }
+
+        .content {
+            padding: 16px;
+            flex: 1;
+            overflow: auto; /* Allows scrolling if content overflows */
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <div class="title"><%= windowName %></div>
+            <div class="control" title="Close"></div>
+        </div>
+        <div class="content">
+            <%- include("../windows/" + filename) %>
+        </div>
+    </div>
+
+    <script>
+        // Function to make the window draggable with boundary constraints
+        function makeDraggable(element) {
+            const titleBar = element.querySelector('.title-bar');
+            const windowWidth = element.offsetWidth;
+            const windowHeight = element.offsetHeight;
+            let isDragging = false;
+            let offsetX, offsetY;
+
+            titleBar.addEventListener('mousedown', (event) => {
+                isDragging = true;
+                offsetX = event.clientX - element.getBoundingClientRect().left;
+                offsetY = event.clientY - element.getBoundingClientRect().top;
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', () => {
+                    isDragging = false;
+                    document.removeEventListener('mousemove', onMouseMove);
+                });
+            });
+
+            function onMouseMove(event) {
+                if (isDragging) {
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+
+                    let newX = event.clientX - offsetX;
+                    let newY = event.clientY - offsetY;
+
+                    // Boundary constraints
+                    const minX = 0;
+                    const maxX = viewportWidth - windowWidth / 2;
+                    const minY = 0;
+                    const maxY = viewportHeight - windowHeight / 2;
+
+                    // Apply constraints
+                    newX = Math.max(minX, Math.min(newX, maxX));
+                    newY = Math.max(minY, Math.min(newY, maxY));
+
+                    element.style.left = `${newX}px`;
+                    element.style.top = `${newY}px`;
+                }
+            }
+        }
+
+        // Initialize draggable window
+        const windowElement = document.querySelector('.window');
+        makeDraggable(windowElement);
+
+        // Close button functionality
+        document.querySelector('.control').addEventListener('click', () => {
+            windowElement.remove(); // Remove the window element
+        });
+    </script>
+</body>
+</html>

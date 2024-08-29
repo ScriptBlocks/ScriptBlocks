@@ -24,20 +24,25 @@
       "preload.js",
       "server.js",
       "loading.html",
-      "views/*",
+      "views/**/*",
       "public/*",
       "Python311/**/*"
     ],
     "directories": {
       "buildResources": "resources"
+    },
+    "win": {
+      "icon": "resources/icons/icon.ico"
     }
   },
   "dependencies": {
     "custom-electron-titlebar": "^4.2.8",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
     "portfinder": "^1.0.32",
-    "portscanner": "^2.2.0"
+    "portscanner": "^2.2.0",
+    "python-shell": "^5.0.0"
   },
   "description": "ScriptBlocks IDE",
   "author": "ScriptBlocks Team"
