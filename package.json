@@ -1,0 +1,44 @@
+{
+  "name": "scriptblocks-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "npm run download-python && electron-builder",
+    "download-python": "node download-python.js",
+    "package-linux": "electron-builder --linux",
+    "package-win": "electron-builder --win",
+    "package-mac": "electron-builder --mac"
+  },
+  "devDependencies": {
+    "electron": "^26.0.0",
+    "electron-builder": "^24.0.0",
+    "extract-zip": "^2.0.1"
+  },
+  "build": {
+    "appId": "com.scriptblocks.app",
+    "productName": "ScriptBlocks",
+    "files": [
+      "index.js",
+      "assets/**/*",
+      "preload.js",
+      "server.js",
+      "loading.html",
+      "views/*",
+      "public/*",
+      "Python311/**/*"
+    ],
+    "directories": {
+      "buildResources": "resources"
+    }
+  },
+  "dependencies": {
+    "custom-electron-titlebar": "^4.2.8",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "portfinder": "^1.0.32",
+    "portscanner": "^2.2.0"
+  },
+  "description": "ScriptBlocks IDE",
+  "author": "ScriptBlocks Team"
+}
