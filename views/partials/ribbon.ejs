@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%- include("head.ejs") %>
     <title>Ribbon Menu</title>
     <style>
         main {
@@ -16,15 +17,15 @@
             top: 0;
             width: 100%;
             z-index: 1000;
-            height: 30px; /* Keeps the height as 5% of viewport height */
+            height: 30px;
             display: flex;
-            align-items: center; /* Centers items vertically within the ribbon */
+            align-items: center;
         }
 
         .ribbon-menu {
             display: flex;
             justify-content: left;
-            width: 100%; /* Ensures the menu stretches across the ribbon */
+            width: 100%;
         }
 
         .ribbon-menu ul {
@@ -41,17 +42,17 @@
         .ribbon-menu a {
             color: white;
             text-decoration: none;
-            padding: 0 15px; /* Adjust horizontal padding */
+            padding: 0 15px;
             display: flex;
-            align-items: center; /* Vertically centers text */
-            height: 100%; /* Ensures anchor tag takes full height of the ribbon */
-            font-size: 1.2rem; /* Adjust the font size as needed */
-            transition: background-color 0.3s; /* Smooth transition for hover effect */
+            align-items: center;
+            height: 100%;
+            font-size: 1.2rem;
+            transition: background-color 0.3s;
             cursor: pointer;
         }
 
         .ribbon-menu a:hover {
-            background-color: #444; /* Slightly lighter background color on hover */
+            background-color: #444;
         }
 
         .ribbon-menu .dropdown {
@@ -63,14 +64,14 @@
             min-width: 150px;
             border-radius: 4px;
             box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-            z-index: 1001; /* Ensure dropdown is above other content */
+            z-index: 1001;
         }
 
         .ribbon-menu .dropdown li {
             border-bottom: 1px solid #555;
-            padding: 0 10px; /* Add padding to the li element for spacing */
+            padding: 0 10px;
             display: flex;
-            justify-content: space-between; /* Space out the text and shortcut */
+            justify-content: space-between;
         }
 
         .ribbon-menu .dropdown li:last-child {
@@ -78,15 +79,32 @@
         }
 
         .ribbon-menu .dropdown a {
-            padding: 10px 0; /* Adjust padding to fit the new layout */
-            flex-grow: 1; /* Make the text take up available space */
+            padding: 10px 0;
+            flex-grow: 1;
         }
 
         .ribbon-menu .dropdown span.shortcut {
-            color: #bbb; /* Lighter color for the shortcut text */
-            font-size: 0.8rem; /* Smaller font size for the shortcuts */
-            margin-left: 10px; /* Adds space between text and shortcut */
-            white-space: nowrap; /* Prevents wrapping of shortcut text */
+            color: #bbb;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
+        .dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            z-index: 1002;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .dialog-content {
+            display: flex;
+            flex-direction: column;
         }
     </style>
 </head>
@@ -97,6 +115,7 @@
                 <li>
                     <a id="file-menu">File</a>
                     <ul class="dropdown">
+                        <li><a id="new-project">New Project</a><span class="shortcut">Ctrl+N</span></li>
                         <li><a id="open-folder">Open Folder</a><span class="shortcut">Ctrl+Shift+O</span></li>
                         <li><a id="settings">Settings</a><span class="shortcut">Ctrl+I</span></li>
                     </ul>
@@ -108,13 +127,13 @@
                     </ul>
                 </li>
                 <li><a id="view-menu">View</a></li>
+                <li><a id="view-menu" onclick="generatePythonCode()"><img src="/assets/play.svg" alt="Play Icon"/></a></li>
             </ul>
         </nav>
     </header>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Function to make an element draggable
             function makeDraggable(element) {
                 const titleBar = element.querySelector('.title-bar');
                 if (!titleBar) return;
@@ -140,7 +159,6 @@
                         const windowWidth = element.offsetWidth;
                         const windowHeight = element.offsetHeight;
 
-                        // Ensure the window doesn't go out of bounds
                         const maxX = window.innerWidth - windowWidth;
                         const maxY = window.innerHeight - windowHeight;
 
@@ -150,21 +168,85 @@
                 }
             }
 
-            // Function to dynamically load and display the settings window
+            function newProject() {
+                const projectDialog = document.createElement('div');
+                projectDialog.classList.add('dialog');
+                projectDialog.innerHTML = `
+                    <div class="dialog-content">
+                        <h2>New Project</h2>
+                        <label for="project-name">Project Name:</label>
+                        <input type="text" id="project-name" placeholder="Enter project name">
+                        <label for="project-folder">Select Folder:</label>
+                        <input type="file" id="project-folder" webkitdirectory mozdirectory msdirectory odirectory directory>
+                        <button id="create-project">Create</button>
+                        <button id="cancel-project">Cancel</button>
+                    </div>
+                `;
+                document.body.appendChild(projectDialog);
+
+                makeDraggable(projectDialog);
+
+                document.getElementById('create-project').addEventListener('click', () => {
+                    const projectName = document.getElementById('project-name').value;
+                    const folderInput = document.getElementById('project-folder');
+
+                    if (projectName && folderInput.files.length > 0) {
+                        // Extract the folder path from the selected files
+                        const folderPath = folderInput.files[0].webkitRelativePath.split('/')[0];
+
+                        fetch('/create-project', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                projectName: projectName,
+                                folderPath: folderPath,
+                            }),
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(`Project "${projectName}" created successfully!`);
+                            } else {
+                                alert(`Error: ${data.message}`);
+                            }
+                            projectDialog.remove();
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Failed to create project.');
+                            projectDialog.remove();
+                        });
+                    } else {
+                        alert('Please enter a project name and select a folder.');
+                    }
+                });
+
+                document.getElementById('cancel-project').addEventListener('click', () => {
+                    projectDialog.remove();
+                });
+            }
+
+            function openFolder() {
+                alert('Open Folder triggered by shortcut or click!');
+            }
+
+            function selectAll() {
+                alert('Select All triggered by shortcut or click!');
+            }
+
             function openSettings() {
                 fetch('/settings-window')
                     .then(response => response.text())
                     .then(html => {
-                        // Create and insert the window element
                         const newWindow = document.createElement('div');
                         newWindow.classList.add('window');
                         newWindow.innerHTML = html;
                         document.body.appendChild(newWindow);
 
-                        // Initialize draggable functionality
                         makeDraggable(newWindow);
 
-                        // Add functionality to the close button
                         const closeButton = newWindow.querySelector('.control');
                         if (closeButton) {
                             closeButton.addEventListener('click', () => {
@@ -175,77 +257,57 @@
                     .catch(error => console.error('Error loading settings window:', error));
             }
 
-            // Define shortcut actions
-            function openFolder() {
-                alert('Open Folder triggered by shortcut or click!');
-            }
-            
-            function selectAll() {
-                alert('Select All triggered by shortcut or click!');
-            }
-            
-            // Define keyboard shortcuts
             const shortcuts = [
                 {
-                    keys: [17, 16, 79], // Ctrl (17) + Shift (16) + O (79)
+                    keys: [17, 16, 79],
                     action: openFolder
                 },
                 {
-                    keys: [17, 73], // Ctrl (17) + I (73)
+                    keys: [17, 73],
                     action: openSettings
                 },
                 {
-                    keys: [17, 65], // Ctrl (17) + A (65)
+                    keys: [17, 65],
                     action: selectAll
+                },
+                {
+                    keys: [17, 78],
+                    action: newProject
                 }
             ];
-            
+
             document.addEventListener('keydown', (event) => {
                 const pressedKeys = [];
-                if (event.ctrlKey) pressedKeys.push(17); // Ctrl
-                if (event.shiftKey) pressedKeys.push(16); // Shift
-                if (event.altKey) pressedKeys.push(18); // Alt
-                if (event.key) pressedKeys.push(event.keyCode); // Other keys
-            
+                if (event.ctrlKey) pressedKeys.push(17);
+                if (event.shiftKey) pressedKeys.push(16);
+                if (event.altKey) pressedKeys.push(18);
+                if (event.key) pressedKeys.push(event.keyCode);
+
                 shortcuts.forEach(shortcut => {
                     if (JSON.stringify(shortcut.keys) === JSON.stringify(pressedKeys)) {
-                        event.preventDefault(); // Prevent default browser action
-                        shortcut.action(); // Trigger the associated action
+                        event.preventDefault();
+                        shortcut.action();
                     }
                 });
             });
 
-            // Function to toggle dropdown visibility
             function toggleDropdown(event) {
                 const target = event.currentTarget;
                 const dropdown = target.nextElementSibling;
                 if (dropdown) {
-                    const isVisible = dropdown.style.display === 'block';
-                    // Close all dropdowns
-                    document.querySelectorAll('.ribbon-menu .dropdown').forEach(dd => dd.style.display = 'none');
-                    // Open the clicked dropdown if it was not already open
-                    if (!isVisible) {
-                        dropdown.style.display = 'block';
-                    }
+                    const isOpen = dropdown.style.display === 'block';
+
+                    document.querySelectorAll('.dropdown').forEach(drop => {
+                        drop.style.display = 'none';
+                    });
+
+                    dropdown.style.display = isOpen ? 'none' : 'block';
                 }
             }
 
-            // Event listeners for ribbon menu items
-            document.querySelectorAll('.ribbon-menu > ul > li > a').forEach(menuItem => {
-                menuItem.addEventListener('click', toggleDropdown);
+            document.querySelectorAll('.ribbon-menu > ul > li > a').forEach(button => {
+                button.addEventListener('click', toggleDropdown);
             });
-
-            // Click event listener to close dropdowns if clicking outside
-            document.addEventListener('click', (event) => {
-                if (!event.target.closest('.ribbon-menu')) {
-                    document.querySelectorAll('.ribbon-menu .dropdown').forEach(dd => dd.style.display = 'none');
-                }
-            });
-
-            // Link ribbon buttons to the functions
-            document.getElementById('open-folder').onclick = openFolder;
-            document.getElementById('settings').onclick = openSettings;
-            document.getElementById('select-all').onclick = selectAll;
         });
     </script>
 </body>

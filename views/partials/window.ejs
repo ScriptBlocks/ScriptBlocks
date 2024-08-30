@@ -56,7 +56,6 @@
             padding: 16px;
             flex: 1;
             overflow: auto; /* Allows scrolling if content overflows */
-            color: black;
         }
     </style>
 </head>
@@ -72,11 +71,9 @@
     </div>
 
     <script>
-        // Function to make the window draggable with boundary constraints
+        // Function to make the window draggable
         function makeDraggable(element) {
             const titleBar = element.querySelector('.title-bar');
-            const windowWidth = element.offsetWidth;
-            const windowHeight = element.offsetHeight;
             let isDragging = false;
             let offsetX, offsetY;
 
@@ -93,24 +90,10 @@
 
             function onMouseMove(event) {
                 if (isDragging) {
-                    const viewportWidth = window.innerWidth;
-                    const viewportHeight = window.innerHeight;
-
-                    let newX = event.clientX - offsetX;
-                    let newY = event.clientY - offsetY;
-
-                    // Boundary constraints
-                    const minX = 0;
-                    const maxX = viewportWidth - windowWidth / 2;
-                    const minY = 0;
-                    const maxY = viewportHeight - windowHeight / 2;
-
-                    // Apply constraints
-                    newX = Math.max(minX, Math.min(newX, maxX));
-                    newY = Math.max(minY, Math.min(newY, maxY));
-
-                    element.style.left = `${newX}px`;
-                    element.style.top = `${newY}px`;
+                    const x = event.clientX - offsetX;
+                    const y = event.clientY - offsetY;
+                    element.style.left = `${x}px`;
+                    element.style.top = `${y}px`;
                 }
             }
         }

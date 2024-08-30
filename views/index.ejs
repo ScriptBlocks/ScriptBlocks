@@ -2,59 +2,94 @@
 <html lang="en">
 <head>
     <%- include("partials/head.ejs") %>
+    <style>
+        /* Reset default margins and padding, and ensure full height */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Make body a flex container to stretch the main element */
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ensure the main element takes the remaining space */
+        main {
+            flex: 1; /* This makes sure main takes up the remaining space */
+            display: flex;
+            box-sizing: border-box;
+            color: black;
+        }
+
+        /* Left section - Directory tree */
+        #leftSection {
+            width: 25%;
+            background-color: #222;
+            border-right: 1px solid #ccc;
+            box-sizing: border-box;
+            overflow-y: auto;
+            height: 100%;
+            color: white;
+        }
+
+        /* Right section - Contains both Blockly and Console */
+        #rightSection {
+            width: 75%;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        /* Blockly/Code editor area */
+        #blocklyDiv {
+            background-color: #444;
+            border-bottom: 1px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            height: 70%;
+            box-sizing: border-box;
+        }
+
+        /* Console area */
+        #consoleDiv {
+            background-color: #222;
+            color: white;
+            height: 30%;
+            box-sizing: border-box;
+            overflow-y: auto;
+            padding: 10px;
+            user-select: text;
+        }
+    </style>
 </head>
 <body>
     <%- include("partials/ribbon.ejs") %>
 
     <main>
-        <div id="blocklyDiv" style="height: 480px; width: 600px;"></div>
-        
-        <script>
-            // Define your block definitions
-            const definitions = [
-                {
-                    // The type is like the "class name" for your block. It is used to construct
-                    // new instances. E.g. in the toolbox.
-                    type: 'create_app',
-                    // The message defines the basic text of your block, and where inputs or
-                    // fields will be inserted.
-                    message0: 'Create app with name %1',
-                    args0: [
-                        // Each arg is associated with a %# in the message.
-                        // This one gets substituted for %1.
-                        {
-                            // The type specifies the kind of input or field to be inserted.
-                            type: 'field_input',
-                            // The name allows you to reference the field and get its value.
-                            name: 'FIELD_NAME',
-                        }
-                    ],
-                    // Adds an untyped previous connection to the top of the block.
-                    previousStatement: null,
-                    // Adds an untyped next connection to the bottom of the block.
-                    nextStatement: null,
-                }
-            ];
-            
-            // Register the definition.
-            Blockly.defineBlocksWithJsonArray(definitions);
+        <!-- Left section - Directory tree -->
+        <section id="leftSection">
+            <h2>Directory Tree</h2>
+            <p>Content for the directory tree.</p>
+        </section>
 
-            const toolbox = {
-                // There are two kinds of toolboxes. The simpler one is a flyout toolbox.
-                kind: 'flyoutToolbox',
-                // The contents is the blocks and other items that exist in your toolbox.
-                contents: [
-                    {
-                        kind: 'block',
-                        type: 'create_app'
-                    }
-                    // You can add more blocks to this array.
-                ]
-            };
+        <!-- Right section - Contains Blockly and Console -->
+        <div id="rightSection">
+            <!-- Blockly/Code editor area -->
+            <div id="blocklyDiv"></div>
 
-            // The toolbox gets passed to the configuration struct during injection.
-            const workspace = Blockly.inject('blocklyDiv', {toolbox: toolbox});
-        </script>
+            <!-- Console area -->
+            <div id="consoleDiv">
+                <h2>Console</h2>
+                <pre id="output">Console output will be shown here.</pre>
+            </div>
+        </div>
     </main>
+    
+    <!-- Include your custom JavaScript files -->
+    <script src="/blocks.js"></script>
 </body>
 </html>

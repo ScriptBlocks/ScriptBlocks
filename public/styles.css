@@ -6,3 +6,7 @@ body {
     background-color: #222;
     color: #fff;
 }
+
+main {
+    margin: 0;
+}
