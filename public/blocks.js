@@ -552,6 +552,10 @@ const toolbox = {
                 {
                     "kind": "block",
                     "type": "text_length"
+                },
+                {
+                    "kind": "block",
+                    "type": "plainnumber"
                 }
             ]
         },

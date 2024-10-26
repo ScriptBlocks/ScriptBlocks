@@ -232,10 +232,6 @@
                 alert('Open Folder triggered by shortcut or click!');
             }
 
-            function selectAll() {
-                alert('Select All triggered by shortcut or click!');
-            }
-
             function openSettings() {
                 fetch('/settings-window')
                     .then(response => response.text())
@@ -265,10 +261,6 @@
                 {
                     keys: [17, 73],
                     action: openSettings
-                },
-                {
-                    keys: [17, 65],
-                    action: selectAll
                 },
                 {
                     keys: [17, 78],
