@@ -1,54 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <%- include("partials/head.ejs") %>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/default.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electron Terminal</title>
+    <link rel="stylesheet" href="/highlight/default.min.css">
+    <link rel="stylesheet" href="/xterm.css" />
     <style>
         html, body {
             margin: 0;
             padding: 0;
             height: 100%;
-            box-sizing: border-box;
             font-family: Arial, sans-serif;
             background-color: #1e1e1e;
             color: white;
         }
-
         body {
             display: flex;
-            flex-direction: row; /* Change to row for left and right sections */
+            flex-direction: row;
         }
-
         main {
             flex: 1;
             display: flex;
-            box-sizing: border-box;
         }
-
         #leftSection {
             width: 25%;
             background-color: #222;
             border-right: 1px solid #444;
-            box-sizing: border-box;
             overflow-y: auto;
             height: 100%;
             color: white;
         }
-
         #rightSection {
             width: 75%;
             display: flex;
             flex-direction: column;
-            box-sizing: border-box;
         }
-
         .codearea {
-            flex: 0 0 66%; /* Set height to 66% of the right section */
+            flex: 0 0 66%;
             position: relative;
             display: flex;
-            box-sizing: border-box;
         }
-
         #codeBlock {
             position: absolute;
             top: 0;
@@ -56,12 +48,10 @@
             right: 0;
             bottom: 0;
             padding: 10px;
-            white-space: pre;
             overflow: auto;
             background: #1e1e1e;
-            pointer-events: none; /* Prevent mouse events */
+            pointer-events: none;
         }
-
         textarea {
             flex: 1;
             color: #fff;
@@ -70,28 +60,17 @@
             border: none;
             background: transparent;
             padding: 10px;
-            font-family: "Courier New", Courier, monospace;
-            overflow-wrap: normal;
             white-space: pre-wrap;
-            position: relative;
-            z-index: 1; /* Ensure it is above the code block */
             color: rgba(0,0,0,0);
         }
-
-        #consoleDiv {
-            flex: 1; /* Allow consoleDiv to take the remaining height (34%) */
+        #terminal {
+            flex: 1;
             background-color: #222;
-            color: white;
-            box-sizing: border-box;
-            overflow-y: auto;
             padding: 10px;
-            user-select: text;
         }
     </style>
 </head>
 <body>
-    <%- include("partials/ribbon.ejs") %>
-
     <main>
         <section id="leftSection">
             <h2>Directory Tree</h2>
@@ -103,46 +82,33 @@
                 <textarea id="textarea1" wrap="soft" spellcheck="false"></textarea>
                 <pre id="codeBlock" class="language-python" wrap="soft"></pre>
             </div>
-            <div id="consoleDiv">
-                <h2>Console</h2>
-                <pre id="output">Console output will be shown here.</pre>
-            </div>
+            <div id="terminal"></div>
         </div>
     </main>
 
-    <script type="text/javascript">
+    <script src="/highlight.js"></script>
+    <script src="/xterm.js"></script>
+    <script>
+        // Syntax Highlighting for Code Editor
         const textarea1 = document.getElementById("textarea1");
         const codeBlock = document.getElementById("codeBlock");
-    
-        // Update code block when textarea changes
+
         function updateCode() {
             const content = textarea1.value
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;');
-            
-            // Update the content of the code block
-            codeBlock.innerHTML = content; // Update codeBlock with escaped content
-            
-            // Call the highlight function to update syntax highlighting
-            highlightJS();
-        }
-
-        // Highlight.js function
-        function highlightJS() {
-            // Clear previous highlights to avoid duplication
-            codeBlock.innerHTML = codeBlock.innerHTML.replace(/<mark class="hljs.*?<\/mark>/g, "");
+            codeBlock.innerHTML = content;
             hljs.highlightElement(codeBlock);
         }
-    
+
         textarea1.addEventListener("input", updateCode);
-    
-        // Initial code setup
         window.onload = function () {
             const initialCode = "# Write your code here...\nprint('Hello, World!')";
             textarea1.value = initialCode;
             updateCode();
         };
     </script>
+    <script src="/renderer.js"></script>
 </body>
 </html>

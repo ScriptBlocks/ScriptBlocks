@@ -3,6 +3,7 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const simpleGit = require('simple-git');
+const { exec } = require('child_process');
 
 const app = express();
 const server = http.createServer(app);
@@ -25,9 +26,7 @@ const findFreePort = (startingPort) => {
 const startServer = async () => {
     port = await findFreePort(port);
 
-    app.use
-
-(express.json());
+    app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     app.set('view engine', 'ejs');
     app.set('views', path.join(__dirname, 'views'));
@@ -57,13 +56,25 @@ const startServer = async () => {
         const targetPath = path.join(folderPath, projectName);
 
         try {
-            // Clone the repository to the target path
             await git.clone('https://github.com/ScriptBlocks/example-project.git', targetPath);
             res.json({ success: true });
         } catch (error) {
             console.error('Git clone error:', error);
             res.status(500).json({ success: false, message: 'Failed to create project.' });
         }
+    });
+
+    // Endpoint to execute commands
+    app.post('/execute-command', (req, res) => {
+        const { command } = req.body;
+
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error executing command: ${error}`);
+                return res.json({ success: false, output: stderr || error.message });
+            }
+            res.json({ success: true, output: stdout || stderr });
+        });
     });
 
     server.listen(port, () => {
