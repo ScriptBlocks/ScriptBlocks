@@ -3,7 +3,8 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const simpleGit = require('simple-git');
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
+const shellQuote = require('shell-quote');
 
 const app = express();
 const server = http.createServer(app);
@@ -68,7 +69,11 @@ const startServer = async () => {
     app.post('/execute-command', (req, res) => {
         const { command } = req.body;
 
-        exec(command, (error, stdout, stderr) => {
+        const parsedCommand = shellQuote.parse(command);
+        const cmd = parsedCommand[0];
+        const args = parsedCommand.slice(1);
+
+        execFile(cmd, args, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Error executing command: ${error}`);
                 return res.json({ success: false, output: stderr || error.message });
