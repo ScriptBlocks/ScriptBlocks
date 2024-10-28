@@ -4,8 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "build": "npm run download-python && electron-builder",
-    "download-python": "node download-python.js",
+    "build": "electron-builder",
     "package-linux": "electron-builder --linux",
     "package-win": "electron-builder --win",
     "package-mac": "electron-builder --mac"
@@ -25,8 +24,7 @@
       "server.js",
       "loading.html",
       "views/**/*",
-      "public/*",
-      "Python311/**/*"
+      "public/*"
     ],
     "directories": {
       "buildResources": "resources"
