@@ -7,15 +7,16 @@ const { execFile } = require('child_process');
 const shellQuote = require('shell-quote');
 const os = require('os');
 const rateLimit = require('express-rate-limit');
-const validator = require('validator'); // For additional path and command validation
+const validator = require('validator'); 
 
 const app = express();
 const server = http.createServer(app);
 const git = simpleGit();
 
 let port = 1024;
+
 const findFreePort = (startingPort) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const server = http.createServer();
         server.listen(startingPort, () => {
             server.once('close', () => resolve(startingPort));
@@ -81,16 +82,16 @@ const startServer = async () => {
 
     app.post('/execute-command', commandLimiter, (req, res) => {
         let { command, currentDir } = req.body;
-        
-        // Set the default working directory to the user's home directory if '~' is used
-        let workingDir = currentDir === '~' ? os.homedir() : currentDir;
-        
-        // Validate workingDir
-        if (!path.isAbsolute(workingDir) || !fs.existsSync(workingDir) || !fs.lstatSync(workingDir).isDirectory()) {
+
+        // Restrict `workingDir` to the user's home directory
+        let workingDir = currentDir === '~' ? os.homedir() : path.resolve(os.homedir(), currentDir);
+
+        // Validate that workingDir is inside the home directory
+        if (!workingDir.startsWith(os.homedir()) || !fs.existsSync(workingDir) || !fs.lstatSync(workingDir).isDirectory()) {
             return res.status(400).json({ success: false, message: 'Invalid working directory.' });
         }
-        
-        // Sanitize and validate command
+
+        // Sanitize and validate the command
         command = command.trim();
         if (!validator.isAscii(command)) {
             return res.status(400).json({ success: false, message: 'Invalid command.' });
