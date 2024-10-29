@@ -7,9 +7,11 @@
     "build": "electron-builder",
     "package-linux": "electron-builder --linux",
     "package-win": "electron-builder --win",
-    "package-mac": "electron-builder --mac"
+    "package-mac": "electron-builder --mac",
+    "postinstall": "node postinstall.js"
   },
   "devDependencies": {
+    "dotenv": "^16.4.5",
     "electron": "^33.0.2",
     "electron-builder": "^25.1.8",
     "extract-zip": "^2.0.1"
@@ -19,7 +21,6 @@
     "productName": "ScriptBlocks",
     "files": [
       "index.js",
-      "assets/**/*",
       "preload.js",
       "server.js",
       "loading.html",
@@ -30,7 +31,16 @@
       "buildResources": "resources"
     },
     "win": {
-      "icon": "resources/icons/icon.ico"
+      "icon": "resources/icons/icon.ico",
+      "cscLink": "${env:CSC_LINK}",
+      "cscKeyPassword": "${env:CSC_KEY_PASSWORD}"
+    },
+    "mac": {
+      "identity": "${CSC_IDENTITY}",
+      "sign": {
+        "certificateFile": "${CSC_LINK}",
+        "certificatePassword": "${CSC_KEY_PASSWORD}"
+      }
     }
   },
   "dependencies": {
