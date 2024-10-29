@@ -19,8 +19,3 @@ for (const key in envs) {
     process.env[key] = envs[key];
   }
 }
-
-// Debugging output
-console.log('Loaded environment variables:');
-console.log('CSC_LINK:', process.env.CSC_LINK);
-console.log('CSC_KEY_PASSWORD:', process.env.CSC_KEY_PASSWORD);
