@@ -6,13 +6,14 @@ const simpleGit = require('simple-git');
 const { execFile } = require('child_process');
 const shellQuote = require('shell-quote');
 const os = require('os');
-const rateLimit = require('express-rate-limit'); // Import express-rate-limit
+const rateLimit = require('express-rate-limit');
+const validator = require('validator'); // For additional path and command validation
 
 const app = express();
 const server = http.createServer(app);
 const git = simpleGit();
 
-let port = 1024; // Starting port
+let port = 1024;
 const findFreePort = (startingPort) => {
     return new Promise((resolve, reject) => {
         const server = http.createServer();
@@ -54,10 +55,9 @@ const startServer = async () => {
         res.json({ homeDir });
     });
 
-    // Apply rate limiting to the /execute-command endpoint
     const commandLimiter = rateLimit({
-        windowMs: 60 * 1000, // 1 minute window
-        max: 10, // Limit each IP to 10 requests per minute
+        windowMs: 60 * 1000,
+        max: 10,
         message: { success: false, message: 'Too many requests, please try again later.' }
     });
 
@@ -79,9 +79,22 @@ const startServer = async () => {
         }
     });
 
-    app.post('/execute-command', commandLimiter, (req, res) => { // Apply rate limiting here
-        const { command, currentDir } = req.body;
-        let workingDir = currentDir === '~' ? process.env.HOME || process.cwd() : currentDir;
+    app.post('/execute-command', commandLimiter, (req, res) => {
+        let { command, currentDir } = req.body;
+        
+        // Set the default working directory to the user's home directory if '~' is used
+        let workingDir = currentDir === '~' ? os.homedir() : currentDir;
+        
+        // Validate workingDir
+        if (!path.isAbsolute(workingDir) || !fs.existsSync(workingDir) || !fs.lstatSync(workingDir).isDirectory()) {
+            return res.status(400).json({ success: false, message: 'Invalid working directory.' });
+        }
+        
+        // Sanitize and validate command
+        command = command.trim();
+        if (!validator.isAscii(command)) {
+            return res.status(400).json({ success: false, message: 'Invalid command.' });
+        }
 
         if (command.startsWith('cd ')) {
             const targetDir = path.resolve(workingDir, command.slice(3).trim());
