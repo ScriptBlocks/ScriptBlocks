@@ -1,4 +1,3 @@
 node_modules/*
 dist/*
-Python311/*
-temp/*
+signing/*
