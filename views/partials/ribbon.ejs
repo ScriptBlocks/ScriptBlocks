@@ -123,11 +123,19 @@
                 <li>
                     <a id="edit-menu">Edit</a>
                     <ul class="dropdown">
-                        <li><a id="select-all">Select All</a><span class="shortcut">Ctrl+A</span></li>
+                        <li><a id="copy">Copy</a><span class="shortcut">Ctrl+C</span></li>
+                        <li><a id="paste">Paste</a><span class="shortcut">Ctrl+V</span></li>
                     </ul>
                 </li>
                 <li><a id="view-menu">View</a></li>
-                <li><a id="view-menu" onclick="generatePythonCode()"><img src="/assets/play.svg" alt="Play Icon"/></a></li>
+                <li>
+                    <a id="help-menu">Help</a>
+                    <ul class="dropdown">
+                        <li><a id="discord-link">Discord</a></li>
+                        <li><a id="create-issue">Create an issue</a></li>
+                    </ul>
+                </li>
+                <li><a id="play-button" onclick="generatePythonCode()"><img src="/assets/play.svg" alt="Play Icon"/></a></li>
             </ul>
         </nav>
     </header>
@@ -137,10 +145,10 @@
             function makeDraggable(element) {
                 const titleBar = element.querySelector('.title-bar');
                 if (!titleBar) return;
-
+    
                 let isDragging = false;
                 let offsetX, offsetY;
-
+    
                 titleBar.addEventListener('mousedown', (event) => {
                     isDragging = true;
                     offsetX = event.clientX - element.getBoundingClientRect().left;
@@ -151,23 +159,23 @@
                         document.removeEventListener('mousemove', onMouseMove);
                     });
                 });
-
+    
                 function onMouseMove(event) {
                     if (isDragging) {
                         const x = event.clientX - offsetX;
                         const y = event.clientY - offsetY;
                         const windowWidth = element.offsetWidth;
                         const windowHeight = element.offsetHeight;
-
+    
                         const maxX = window.innerWidth - windowWidth;
                         const maxY = window.innerHeight - windowHeight;
-
+    
                         element.style.left = `${Math.max(0, Math.min(x, maxX))}px`;
                         element.style.top = `${Math.max(0, Math.min(y, maxY))}px`;
                     }
                 }
             }
-
+    
             function newProject() {
                 const projectDialog = document.createElement('div');
                 projectDialog.classList.add('dialog');
@@ -183,17 +191,16 @@
                     </div>
                 `;
                 document.body.appendChild(projectDialog);
-
+    
                 makeDraggable(projectDialog);
-
+    
                 document.getElementById('create-project').addEventListener('click', () => {
                     const projectName = document.getElementById('project-name').value;
                     const folderInput = document.getElementById('project-folder');
-
+    
                     if (projectName && folderInput.files.length > 0) {
-                        // Extract the folder path from the selected files
                         const folderPath = folderInput.files[0].webkitRelativePath.split('/')[0];
-
+    
                         fetch('/create-project', {
                             method: 'POST',
                             headers: {
@@ -222,16 +229,17 @@
                         alert('Please enter a project name and select a folder.');
                     }
                 });
-
+    
                 document.getElementById('cancel-project').addEventListener('click', () => {
                     projectDialog.remove();
                 });
             }
-
+    
             function openFolder() {
                 alert('Open Folder triggered by shortcut or click!');
+                // Implement folder opening functionality here
             }
-
+    
             function openSettings() {
                 fetch('/settings-window')
                     .then(response => response.text())
@@ -240,9 +248,9 @@
                         newWindow.classList.add('window');
                         newWindow.innerHTML = html;
                         document.body.appendChild(newWindow);
-
+    
                         makeDraggable(newWindow);
-
+    
                         const closeButton = newWindow.querySelector('.control');
                         if (closeButton) {
                             closeButton.addEventListener('click', () => {
@@ -252,55 +260,85 @@
                     })
                     .catch(error => console.error('Error loading settings window:', error));
             }
-
+    
             const shortcuts = [
                 {
-                    keys: [17, 16, 79],
+                    keys: [17, 16, 79], // Ctrl + Shift + O
                     action: openFolder
                 },
                 {
-                    keys: [17, 73],
+                    keys: [17, 73], // Ctrl + I
                     action: openSettings
                 },
                 {
-                    keys: [17, 78],
+                    keys: [17, 78], // Ctrl + N
                     action: newProject
                 }
             ];
-
+    
             document.addEventListener('keydown', (event) => {
                 const pressedKeys = [];
                 if (event.ctrlKey) pressedKeys.push(17);
                 if (event.shiftKey) pressedKeys.push(16);
-                if (event.altKey) pressedKeys.push(18);
-                if (event.key) pressedKeys.push(event.keyCode);
-
+                if (event.keyCode) pressedKeys.push(event.keyCode);
+    
                 shortcuts.forEach(shortcut => {
-                    if (JSON.stringify(shortcut.keys) === JSON.stringify(pressedKeys)) {
+                    if (shortcut.keys.every(key => pressedKeys.includes(key))) {
                         event.preventDefault();
                         shortcut.action();
                     }
                 });
             });
-
-            function toggleDropdown(event) {
-                const target = event.currentTarget;
-                const dropdown = target.nextElementSibling;
-                if (dropdown) {
-                    const isOpen = dropdown.style.display === 'block';
-
-                    document.querySelectorAll('.dropdown').forEach(drop => {
-                        drop.style.display = 'none';
-                    });
-
-                    dropdown.style.display = isOpen ? 'none' : 'block';
+    
+            // Attach event listeners for ribbon buttons
+            document.getElementById('new-project').addEventListener('click', newProject);
+            document.getElementById('open-folder').addEventListener('click', openFolder);
+            document.getElementById('settings').addEventListener('click', openSettings);
+            document.getElementById('discord-link').addEventListener('click', () => {
+                window.open('https://discord.gg/ng7t4PphGw', '_blank');
+            });
+            document.getElementById('create-issue').addEventListener('click', () => {
+                window.open('https://github.com/ScriptBlocks/ScriptBlocks/issues/new', '_blank');
+            });
+    
+            // Toggle file dropdown visibility
+            document.getElementById('file-menu').addEventListener('click', () => {
+                const dropdown = document.querySelector('#file-menu + .dropdown');
+                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            });
+    
+            // Toggle help dropdown visibility
+            document.getElementById('help-menu').addEventListener('click', () => {
+                const dropdown = document.querySelector('#help-menu + .dropdown');
+                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            });
+    
+            // Hide dropdown when mouse leaves
+            document.querySelectorAll('.ribbon-menu li').forEach(li => {
+                li.addEventListener('mouseleave', () => {
+                    const dropdown = li.querySelector('.dropdown');
+                    if (dropdown) dropdown.style.display = 'none';
+                });
+            });
+    
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (event) => {
+                const fileMenu = document.getElementById('file-menu');
+                const helpMenu = document.getElementById('help-menu');
+                const fileDropdown = document.querySelector('#file-menu + .dropdown');
+                const helpDropdown = document.querySelector('#help-menu + .dropdown');
+    
+                // Close file dropdown if clicked outside
+                if (!fileMenu.contains(event.target) && fileDropdown) {
+                    fileDropdown.style.display = 'none';
                 }
-            }
-
-            document.querySelectorAll('.ribbon-menu > ul > li > a').forEach(button => {
-                button.addEventListener('click', toggleDropdown);
+    
+                // Close help dropdown if clicked outside
+                if (!helpMenu.contains(event.target) && helpDropdown) {
+                    helpDropdown.style.display = 'none';
+                }
             });
         });
-    </script>
+    </script> 
 </body>
 </html>

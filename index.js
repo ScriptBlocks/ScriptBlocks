@@ -1,29 +1,10 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, shell } = require('electron');
 const path = require('path');
-// const { setupTitlebar, attachTitlebarToWindow, TitlebarColor } = require('custom-electron-titlebar/main');
-const { start, startServer } = require('./server'); // Import the start function from server.js
+const { start, startServer } = require('./server');
 
 let mainWindow;
 
 async function createWindow() {
-    // Set up the custom titlebar with options
-    // setupTitlebar({
-    //     icon: path.join(__dirname, 'icons', 'icon.png'), // Path to the app icon
-    //     iconSize: 20, // Size of the icon
-    //     titleHorizontalAlignment: 'left', // Title aligned to the left
-    //     order: 'first-buttons', // Keep buttons in their default order
-    //     minimizable: true,
-    //     maximizable: true,
-    //     closeable: true,
-    //     tooltips: {
-    //         minimize: 'Minimize',
-    //         maximize: 'Maximize',
-    //         restoreDown: 'Restore Down',
-    //         close: 'Close'
-    //     }
-    // });
-
-    // Create the browser window.
     mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
@@ -31,12 +12,10 @@ async function createWindow() {
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
-            enableRemoteModule: false
+            enableRemoteModule: false,
+            nodeIntegration: true, // Ensure Node.js integration is enabled
         }
     });
-
-    // Attach the custom titlebar to the window
-    // attachTitlebarToWindow(mainWindow);
 
     // Load the loading page first
     mainWindow.loadURL(`file://${path.join(__dirname, 'loading.html')}`);
@@ -48,6 +27,12 @@ async function createWindow() {
     } catch (error) {
         console.error('Error starting server:', error);
     }
+
+    // Handle external links
+    mainWindow.webContents.on('new-window', (event, url) => {
+        event.preventDefault();
+        shell.openExternal(url); // Open the URL in the default browser
+    });
 }
 
 app.whenReady().then(createWindow);
