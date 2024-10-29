@@ -5,6 +5,7 @@ const fs = require('fs');
 const simpleGit = require('simple-git');
 const { execFile } = require('child_process');
 const shellQuote = require('shell-quote');
+const os = require('os');
 
 const app = express();
 const server = http.createServer(app);
@@ -46,6 +47,11 @@ const startServer = async () => {
             resizable: true
         });
     });
+    
+    app.get('/user-home-dir', (req, res) => {
+        const homeDir = process.env.USERPROFILE || os.homedir();
+        res.json({ homeDir });
+    });
 
     app.post('/create-project', async (req, res) => {
         const { projectName, folderPath } = req.body;
@@ -65,22 +71,33 @@ const startServer = async () => {
         }
     });
 
-    // Endpoint to execute commands
     app.post('/execute-command', (req, res) => {
-        const { command } = req.body;
-
-        const parsedCommand = shellQuote.parse(command);
-        const cmd = parsedCommand[0];
-        const args = parsedCommand.slice(1);
-
-        execFile(cmd, args, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`Error executing command: ${error}`);
-                return res.json({ success: false, output: stderr || error.message });
+        const { command, currentDir } = req.body;
+        let workingDir = currentDir === '~' ? process.env.HOME || process.cwd() : currentDir;
+    
+        if (command.startsWith('cd ')) {
+            const targetDir = path.resolve(workingDir, command.slice(3).trim());
+            try {
+                process.chdir(targetDir);
+                workingDir = process.cwd();
+                res.json({ success: true, currentDir: workingDir, output: '' });
+            } catch (error) {
+                res.json({ success: false, currentDir: workingDir, output: `cd: ${error.message}` });
             }
-            res.json({ success: true, output: stdout || stderr });
-        });
-    });
+        } else {
+            const parsedCommand = shellQuote.parse(command);
+            const cmd = parsedCommand[0];
+            const args = parsedCommand.slice(1);
+    
+            execFile(cmd, args, { cwd: workingDir }, (error, stdout, stderr) => {
+                if (error) {
+                    res.json({ success: false, currentDir: workingDir, output: stderr || error.message });
+                } else {
+                    res.json({ success: true, currentDir: workingDir, output: stdout || stderr });
+                }
+            });
+        }
+    });    
 
     server.listen(port, () => {
         console.log(`Server is running on http://localhost:${port}`);
