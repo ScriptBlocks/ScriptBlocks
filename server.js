@@ -6,6 +6,7 @@ const simpleGit = require('simple-git');
 const { execFile } = require('child_process');
 const shellQuote = require('shell-quote');
 const os = require('os');
+const rateLimit = require('express-rate-limit'); // Import express-rate-limit
 
 const app = express();
 const server = http.createServer(app);
@@ -53,6 +54,13 @@ const startServer = async () => {
         res.json({ homeDir });
     });
 
+    // Apply rate limiting to the /execute-command endpoint
+    const commandLimiter = rateLimit({
+        windowMs: 60 * 1000, // 1 minute window
+        max: 10, // Limit each IP to 10 requests per minute
+        message: { success: false, message: 'Too many requests, please try again later.' }
+    });
+
     app.post('/create-project', async (req, res) => {
         const { projectName, folderPath } = req.body;
 
@@ -71,10 +79,10 @@ const startServer = async () => {
         }
     });
 
-    app.post('/execute-command', (req, res) => {
+    app.post('/execute-command', commandLimiter, (req, res) => { // Apply rate limiting here
         const { command, currentDir } = req.body;
         let workingDir = currentDir === '~' ? process.env.HOME || process.cwd() : currentDir;
-    
+
         if (command.startsWith('cd ')) {
             const targetDir = path.resolve(workingDir, command.slice(3).trim());
             try {
@@ -88,7 +96,7 @@ const startServer = async () => {
             const parsedCommand = shellQuote.parse(command);
             const cmd = parsedCommand[0];
             const args = parsedCommand.slice(1);
-    
+
             execFile(cmd, args, { cwd: workingDir }, (error, stdout, stderr) => {
                 if (error) {
                     res.json({ success: false, currentDir: workingDir, output: stderr || error.message });
@@ -97,7 +105,7 @@ const startServer = async () => {
                 }
             });
         }
-    });    
+    });
 
     server.listen(port, () => {
         console.log(`Server is running on http://localhost:${port}`);
