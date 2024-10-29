@@ -7,6 +7,15 @@
     <link rel="stylesheet" href="/highlight/default.min.css">
     <link rel="stylesheet" href="/xterm.css" />
     <style>
+        @font-face {
+            font-family: 'RedHat';
+            src: url('/fonts/redhatmono.woff2') format('woff2'),
+                url('/fonts/redhatmono.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+
+        }
+
         html, body {
             margin: 0;
             padding: 0;
@@ -51,6 +60,7 @@
             overflow: auto;
             background: #1e1e1e;
             pointer-events: none;
+            font-family: "RedHat";
         }
         textarea {
             flex: 1;
