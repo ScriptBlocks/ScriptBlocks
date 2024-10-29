@@ -47,9 +47,9 @@ const startServer = async () => {
             resizable: true
         });
     });
-    
+
     app.get('/user-home-dir', (req, res) => {
-        const homeDir = process.env.USERPROFILE || os.homedir();
+        const homeDir = os.homedir();
         res.json({ homeDir });
     });
 
