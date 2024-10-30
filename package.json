@@ -31,16 +31,10 @@
       "buildResources": "resources"
     },
     "win": {
-      "icon": "resources/icons/icon.ico",
-      "cscLink": "${env:CSC_LINK}",
-      "cscKeyPassword": "${env:CSC_KEY_PASSWORD}"
+      "icon": "resources/icons/icon.ico"
     },
     "mac": {
-      "identity": "${CSC_IDENTITY}",
-      "sign": {
-        "certificateFile": "${CSC_LINK}",
-        "certificatePassword": "${CSC_KEY_PASSWORD}"
-      }
+      
     }
   },
   "dependencies": {
