@@ -13,7 +13,10 @@
                 url('/fonts/redhatmono.woff') format('woff');
             font-weight: normal;
             font-style: normal;
+        }
 
+        * {
+            box-sizing: border-box; /* Include padding in the element's total width and height */
         }
 
         html, body {
@@ -33,7 +36,7 @@
             display: flex;
         }
         #leftSection {
-            width: 25%;
+            width: 25vw;  /* Set width to 25% of the viewport width */
             background-color: #222;
             border-right: 1px solid #444;
             overflow-y: auto;
@@ -41,7 +44,7 @@
             color: white;
         }
         #rightSection {
-            width: 75%;
+            width: 75vw;  /* Set width to 75% of the viewport width */
             display: flex;
             flex-direction: column;
         }
@@ -63,7 +66,7 @@
             font-family: "RedHat";
         }
         textarea {
-            flex: 1;
+            flex: 1;                  /* Allow the textarea to grow and fill available space */
             color: #fff;
             resize: none;
             outline: none;
@@ -74,9 +77,12 @@
             color: rgba(0,0,0,0);
         }
         #terminal {
-            flex: 1;
-            background-color: #222;
-            padding: 10px;
+            flex: 1;                     /* Allow the terminal to grow and fill remaining space */
+            width: 100%;                 /* Full width of the parent */
+            height: 100%;                /* Ensure it fills the height of the parent */
+            background-color: #222;      /* Background color */
+            padding: 0;                  /* Remove padding to prevent overflow */
+            overflow: hidden;            /* Prevent overflow to avoid double scrolling */
         }
     </style>
     <%- include("partials/head") %>
