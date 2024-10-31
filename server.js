@@ -36,9 +36,15 @@ const startServer = async (plugins) => {
     app.set('views', path.join(__dirname, 'views'));
     app.use(express.static(path.join(__dirname, 'public')));
 
+    app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
+
     // Basic route
     app.get('/', (req, res) => {
         res.render('index');
+    });
+
+    app.get('/windows/settings', (req, res) => {
+        res.render('windows/settings');
     });
 
     // User home directory route
