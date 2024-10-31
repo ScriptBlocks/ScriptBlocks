@@ -1,18 +1,17 @@
 const express = require('express');
 const http = require('http');
 const path = require('path');
+const os = require('os');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
+const validator = require('validator'); 
 const simpleGit = require('simple-git');
 const { execFile } = require('child_process');
 const shellQuote = require('shell-quote');
-const os = require('os');
-const rateLimit = require('express-rate-limit');
-const validator = require('validator'); 
 
 const app = express();
 const server = http.createServer(app);
 const git = simpleGit();
-
 let port = 1024;
 
 const findFreePort = (startingPort) => {
@@ -28,7 +27,7 @@ const findFreePort = (startingPort) => {
     });
 };
 
-const startServer = async () => {
+const startServer = async (plugins) => {
     port = await findFreePort(port);
 
     app.use(express.json());
@@ -37,31 +36,34 @@ const startServer = async () => {
     app.set('views', path.join(__dirname, 'views'));
     app.use(express.static(path.join(__dirname, 'public')));
 
+    // Basic route
     app.get('/', (req, res) => {
         res.render('index');
     });
 
-    app.get('/settings-window', (req, res) => {
-        res.render('partials/window', {
-            filename: 'settings.ejs',
-            windowName: 'Settings',
-            width: 450,
-            height: 500,
-            resizable: true
-        });
-    });
-
+    // User home directory route
     app.get('/user-home-dir', (req, res) => {
         const homeDir = os.homedir();
         res.json({ homeDir });
     });
 
+    // Apply server hooks from plugins
+    if (plugins) {
+        plugins.forEach(plugin => {
+            if (typeof plugin.serverHook === 'function') {
+                plugin.serverHook(app);  // Register plugin routes/functions
+            }
+        });
+    }
+
+    // Command execution limiter
     const commandLimiter = rateLimit({
         windowMs: 60 * 1000,
         max: 10,
         message: { success: false, message: 'Too many requests, please try again later.' }
     });
 
+    // Clone project route
     app.post('/create-project', async (req, res) => {
         const { projectName, folderPath } = req.body;
 
@@ -80,10 +82,11 @@ const startServer = async () => {
         }
     });
 
+    // Command execution route
     app.post('/execute-command', commandLimiter, (req, res) => {
         let { command, currentDir } = req.body;
 
-        // Restrict `workingDir` to the user's home directory
+        // Restrict `currentDir` to the user's home directory
         let workingDir = currentDir === '~' ? os.homedir() : path.resolve(os.homedir(), currentDir);
 
         // Validate that workingDir is inside the home directory

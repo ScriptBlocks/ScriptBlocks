@@ -6,10 +6,10 @@
     <%- include("head.ejs") %>
     <title>Ribbon Menu</title>
     <style>
+        /* Your existing styles */
         main {
             padding-top: 30px;
         }
-
         header.ribbon {
             background-color: #333;
             color: white;
@@ -21,24 +21,20 @@
             display: flex;
             align-items: center;
         }
-
         .ribbon-menu {
             display: flex;
             justify-content: left;
             width: 100%;
         }
-
         .ribbon-menu ul {
             list-style: none;
             margin: 0;
             padding: 0;
             display: flex;
         }
-
         .ribbon-menu li {
             position: relative;
         }
-
         .ribbon-menu a {
             color: white;
             text-decoration: none;
@@ -50,11 +46,9 @@
             transition: background-color 0.3s;
             cursor: pointer;
         }
-
         .ribbon-menu a:hover {
             background-color: #444;
         }
-
         .ribbon-menu .dropdown {
             display: none;
             position: absolute;
@@ -66,75 +60,36 @@
             box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
             z-index: 1001;
         }
-
         .ribbon-menu .dropdown li {
             border-bottom: 1px solid #555;
             padding: 0 10px;
             display: flex;
             justify-content: space-between;
         }
-
         .ribbon-menu .dropdown li:last-child {
             border-bottom: none;
         }
-
         .ribbon-menu .dropdown a {
             padding: 10px 0;
             flex-grow: 1;
         }
-
         .ribbon-menu .dropdown span.shortcut {
             color: #bbb;
             font-size: 0.8rem;
             margin-left: 10px;
             white-space: nowrap;
         }
-
-        .dialog {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border: 1px solid #ccc;
-            padding: 20px;
-            z-index: 1002;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .dialog-content {
-            display: flex;
-            flex-direction: column;
-        }
     </style>
 </head>
 <body>
     <header class="ribbon">
         <nav class="ribbon-menu">
-            <ul>
-                <li>
-                    <a id="file-menu">File</a>
-                    <ul class="dropdown">
-                        <li><a id="new-project">New Project</a><span class="shortcut">Ctrl+N</span></li>
-                        <li><a id="open-folder">Open Folder</a><span class="shortcut">Ctrl+Shift+O</span></li>
-                        <li><a id="settings">Settings</a><span class="shortcut">Ctrl+I</span></li>
-                    </ul>
-                </li>
-                <li>
-                    <a id="edit-menu">Edit</a>
-                    <ul class="dropdown">
-                        <li><a id="copy">Copy</a><span class="shortcut">Ctrl+C</span></li>
-                        <li><a id="paste">Paste</a><span class="shortcut">Ctrl+V</span></li>
-                    </ul>
-                </li>
+            <ul id="menu-items">
+                <li><a id="file-menu">File</a></li>
+                <li><a id="edit-menu">Edit</a></li>
                 <li><a id="view-menu">View</a></li>
-                <li>
-                    <a id="help-menu">Help</a>
-                    <ul class="dropdown">
-                        <li><a id="discord-link">Discord</a></li>
-                        <li><a id="create-issue">Create an issue</a></li>
-                    </ul>
-                </li>
+                <li><a id="help-menu">Help</a></li>
+                <li><a id="plugins-menu">Plugins</a></li>
                 <li><a id="play-button" onclick="generatePythonCode()"><img src="/assets/play.svg" alt="Play Icon"/></a></li>
             </ul>
         </nav>
@@ -142,203 +97,109 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            function makeDraggable(element) {
-                const titleBar = element.querySelector('.title-bar');
-                if (!titleBar) return;
-    
-                let isDragging = false;
-                let offsetX, offsetY;
-    
-                titleBar.addEventListener('mousedown', (event) => {
-                    isDragging = true;
-                    offsetX = event.clientX - element.getBoundingClientRect().left;
-                    offsetY = event.clientY - element.getBoundingClientRect().top;
-                    document.addEventListener('mousemove', onMouseMove);
-                    document.addEventListener('mouseup', () => {
-                        isDragging = false;
-                        document.removeEventListener('mousemove', onMouseMove);
-                    });
-                });
-    
-                function onMouseMove(event) {
-                    if (isDragging) {
-                        const x = event.clientX - offsetX;
-                        const y = event.clientY - offsetY;
-                        const windowWidth = element.offsetWidth;
-                        const windowHeight = element.offsetHeight;
-    
-                        const maxX = window.innerWidth - windowWidth;
-                        const maxY = window.innerHeight - windowHeight;
-    
-                        element.style.left = `${Math.max(0, Math.min(x, maxX))}px`;
-                        element.style.top = `${Math.max(0, Math.min(y, maxY))}px`;
-                    }
-                }
-            }
-    
-            function newProject() {
-                const projectDialog = document.createElement('div');
-                projectDialog.classList.add('dialog');
-                projectDialog.innerHTML = `
-                    <div class="dialog-content">
-                        <h2>New Project</h2>
-                        <label for="project-name">Project Name:</label>
-                        <input type="text" id="project-name" placeholder="Enter project name">
-                        <label for="project-folder">Select Folder:</label>
-                        <input type="file" id="project-folder" webkitdirectory mozdirectory msdirectory odirectory directory>
-                        <button id="create-project">Create</button>
-                        <button id="cancel-project">Cancel</button>
-                    </div>
-                `;
-                document.body.appendChild(projectDialog);
-    
-                makeDraggable(projectDialog);
-    
-                document.getElementById('create-project').addEventListener('click', () => {
-                    const projectName = document.getElementById('project-name').value;
-                    const folderInput = document.getElementById('project-folder');
-    
-                    if (projectName && folderInput.files.length > 0) {
-                        const folderPath = folderInput.files[0].webkitRelativePath.split('/')[0];
-    
-                        fetch('/create-project', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                projectName: projectName,
-                                folderPath: folderPath,
-                            }),
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert(`Project "${projectName}" created successfully!`);
-                            } else {
-                                alert(`Error: ${data.message}`);
-                            }
-                            projectDialog.remove();
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('Failed to create project.');
-                            projectDialog.remove();
-                        });
-                    } else {
-                        alert('Please enter a project name and select a folder.');
-                    }
-                });
-    
-                document.getElementById('cancel-project').addEventListener('click', () => {
-                    projectDialog.remove();
-                });
-            }
-    
-            function openFolder() {
-                alert('Open Folder triggered by shortcut or click!');
-                // Implement folder opening functionality here
-            }
-    
-            function openSettings() {
-                fetch('/settings-window')
-                    .then(response => response.text())
-                    .then(html => {
-                        const newWindow = document.createElement('div');
-                        newWindow.classList.add('window');
-                        newWindow.innerHTML = html;
-                        document.body.appendChild(newWindow);
-    
-                        makeDraggable(newWindow);
-    
-                        const closeButton = newWindow.querySelector('.control');
-                        if (closeButton) {
-                            closeButton.addEventListener('click', () => {
-                                newWindow.remove();
-                            });
-                        }
-                    })
-                    .catch(error => console.error('Error loading settings window:', error));
-            }
-    
-            const shortcuts = [
+            const menuItems = [
                 {
-                    keys: [17, 16, 79], // Ctrl + Shift + O
-                    action: openFolder
+                    id: 'file-menu',
+                    items: [
+                        { label: 'New Project', shortcut: 'Ctrl+N', action: () => alert("New Project action") },
+                        { label: 'Open Folder', shortcut: 'Ctrl+Shift+O', action: () => alert("Open Folder action") },
+                        { label: 'Settings', shortcut: 'Ctrl+I', action: () => alert("Settings action") }
+                    ]
                 },
                 {
-                    keys: [17, 73], // Ctrl + I
-                    action: openSettings
+                    id: 'edit-menu',
+                    items: [
+                        { label: 'Copy', shortcut: 'Ctrl+C', action: () => alert("Copy action") },
+                        { label: 'Paste', shortcut: 'Ctrl+V', action: () => alert("Paste action") }
+                    ]
                 },
                 {
-                    keys: [17, 78], // Ctrl + N
-                    action: newProject
+                    id: 'help-menu',
+                    items: [
+                        { label: 'Discord', link: 'https://discord.gg/dgzx3Yg4xY' },
+                        { label: 'Create an Issue', link: 'https://github.com/ScriptBlocks/ScriptBlocks/issues/new' }
+                    ]
+                },
+                {
+                    id: 'plugins-menu',
+                    items: [
+                        { label: 'Search for Plugins', action: () => alert("Search for Plugins action") }
+                    ]
                 }
             ];
-    
-            document.addEventListener('keydown', (event) => {
-                const pressedKeys = [];
-                if (event.ctrlKey) pressedKeys.push(17);
-                if (event.shiftKey) pressedKeys.push(16);
-                if (event.keyCode) pressedKeys.push(event.keyCode);
-    
-                shortcuts.forEach(shortcut => {
-                    if (shortcut.keys.every(key => pressedKeys.includes(key))) {
-                        event.preventDefault();
-                        shortcut.action();
+
+            function toggleDropdown(menuItem) {
+                document.querySelectorAll('.dropdown').forEach(dropdown => dropdown.remove());
+                
+                const dropdown = document.createElement('ul');
+                dropdown.classList.add('dropdown');
+                
+                menuItems.find(m => m.id === menuItem.id).items.forEach(option => {
+                    const listItem = document.createElement('li');
+                    const anchor = document.createElement('a');
+                    anchor.textContent = option.label;
+
+                    if (option.link) {
+                        anchor.href = option.link;
+                        anchor.target = "_blank";
+                    } else if (option.action) {
+                        anchor.href = "#";
+                        anchor.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            option.action();
+                        });
                     }
+
+                    listItem.appendChild(anchor);
+
+                    if (option.shortcut) {
+                        const shortcutSpan = document.createElement('span');
+                        shortcutSpan.textContent = option.shortcut;
+                        shortcutSpan.classList.add('shortcut');
+                        listItem.appendChild(shortcutSpan);
+                    }
+
+                    dropdown.appendChild(listItem);
+                });
+
+                menuItem.parentElement.appendChild(dropdown);
+                dropdown.style.display = 'block';
+            }
+
+            document.querySelectorAll('.ribbon-menu a').forEach(menuItem => {
+                menuItem.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    toggleDropdown(menuItem);
                 });
             });
-    
-            // Attach event listeners for ribbon buttons
-            document.getElementById('new-project').addEventListener('click', newProject);
-            document.getElementById('open-folder').addEventListener('click', openFolder);
-            document.getElementById('settings').addEventListener('click', openSettings);
-            document.getElementById('discord-link').addEventListener('click', () => {
-                window.open('https://discord.gg/ng7t4PphGw', '_blank');
-            });
-            document.getElementById('create-issue').addEventListener('click', () => {
-                window.open('https://github.com/ScriptBlocks/ScriptBlocks/issues/new', '_blank');
-            });
-    
-            // Toggle file dropdown visibility
-            document.getElementById('file-menu').addEventListener('click', () => {
-                const dropdown = document.querySelector('#file-menu + .dropdown');
-                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-            });
-    
-            // Toggle help dropdown visibility
-            document.getElementById('help-menu').addEventListener('click', () => {
-                const dropdown = document.querySelector('#help-menu + .dropdown');
-                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-            });
-    
-            // Hide dropdown when mouse leaves
-            document.querySelectorAll('.ribbon-menu li').forEach(li => {
-                li.addEventListener('mouseleave', () => {
-                    const dropdown = li.querySelector('.dropdown');
-                    if (dropdown) dropdown.style.display = 'none';
-                });
-            });
-    
-            // Close dropdown when clicking outside
+
             document.addEventListener('click', (event) => {
-                const fileMenu = document.getElementById('file-menu');
-                const helpMenu = document.getElementById('help-menu');
-                const fileDropdown = document.querySelector('#file-menu + .dropdown');
-                const helpDropdown = document.querySelector('#help-menu + .dropdown');
-    
-                // Close file dropdown if clicked outside
-                if (!fileMenu.contains(event.target) && fileDropdown) {
-                    fileDropdown.style.display = 'none';
-                }
-    
-                // Close help dropdown if clicked outside
-                if (!helpMenu.contains(event.target) && helpDropdown) {
-                    helpDropdown.style.display = 'none';
+                if (!event.target.closest('.ribbon-menu')) {
+                    document.querySelectorAll('.dropdown').forEach(dropdown => dropdown.style.display = 'none');
                 }
             });
+
+            // Function to inject new dropdowns from plugins
+            window.injectPluginMenu = (pluginName, menuItems) => {
+                const pluginsMenu = menuItems.find(m => m.id === 'plugins-menu');
+                if (pluginsMenu) {
+                    menuItems.push({
+                        id: `${pluginName}-menu`,
+                        items: menuItems
+                    });
+
+                    const newMenuItem = document.createElement('li');
+                    newMenuItem.innerHTML = `<a id="${pluginName}-menu">${pluginName}</a>`;
+                    document.getElementById('menu-items').appendChild(newMenuItem);
+
+                    // Add event listener for the new menu item
+                    newMenuItem.querySelector('a').addEventListener('click', (event) => {
+                        event.preventDefault();
+                        toggleDropdown(newMenuItem);
+                    });
+                }
+            };
         });
-    </script> 
+    </script>    
 </body>
 </html>
