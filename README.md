@@ -35,7 +35,8 @@ To get started with ScriptBlocks:
 
 4. **Run the IDE**: Start the application with:
    ```bash
-   electron index
+   electron index # for Electron
+   npx electron-forge start # for Electron-Forge
    ```
 
 ## License
