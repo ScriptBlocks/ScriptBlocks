@@ -4,7 +4,7 @@ const path = require('path');
 const os = require('os');
 const fs = require('fs');
 const rateLimit = require('express-rate-limit');
-const validator = require('validator'); 
+const validator = require('validator');
 const simpleGit = require('simple-git');
 const { execFile } = require('child_process');
 const shellQuote = require('shell-quote');
@@ -35,7 +35,6 @@ const startServer = async (plugins) => {
     app.set('view engine', 'ejs');
     app.set('views', path.join(__dirname, 'views'));
     app.use(express.static(path.join(__dirname, 'public')));
-
     app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 
     // Basic route
@@ -52,15 +51,6 @@ const startServer = async (plugins) => {
         const homeDir = os.homedir();
         res.json({ homeDir });
     });
-
-    // Apply server hooks from plugins
-    if (plugins) {
-        plugins.forEach(plugin => {
-            if (typeof plugin.serverHook === 'function') {
-                plugin.serverHook(app);  // Register plugin routes/functions
-            }
-        });
-    }
 
     // Command execution limiter
     const commandLimiter = rateLimit({
@@ -92,7 +82,6 @@ const startServer = async (plugins) => {
     app.post('/execute-command', commandLimiter, (req, res) => {
         let { command, currentDir } = req.body;
 
-        // Restrict `currentDir` to the user's home directory
         let workingDir = currentDir === '~' ? os.homedir() : path.resolve(os.homedir(), currentDir);
 
         // Validate that workingDir is inside the home directory
@@ -129,6 +118,15 @@ const startServer = async (plugins) => {
             });
         }
     });
+
+    // Apply server hooks from plugins
+    if (plugins) {
+        plugins.forEach(plugin => {
+            if (typeof plugin.serverHook === 'function') {
+                plugin.serverHook(app);  // Register plugin routes/functions
+            }
+        });
+    }
 
     server.listen(port, () => {
         console.log(`Server is running on http://localhost:${port}`);

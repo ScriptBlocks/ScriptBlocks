@@ -1,3 +1,5 @@
 node_modules/*
 signing/*
 out/
+dist/
+.env

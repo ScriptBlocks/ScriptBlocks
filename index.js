@@ -1,60 +1,57 @@
 const { app, BrowserWindow, shell } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { startServer } = require('./server');
 
 let mainWindow;
 
-// Function to create the main window
+function loadPlugins() {
+    const pluginsDir = path.join(__dirname, 'plugins');
+    const plugins = []; // Array to hold loaded plugins
+
+    fs.readdirSync(pluginsDir).forEach(file => {
+        if (file.endsWith('.js')) {
+            const pluginPath = path.join(pluginsDir, file);
+            const plugin = require(pluginPath);
+            plugins.push(plugin); // Store the plugin for server hooks
+        }
+    });
+
+    return plugins; // Return loaded plugins
+}
+
 async function createWindow() {
     mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
-        autoHideMenuBar: false,
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'), // Ensure this file is properly set up for context isolation
+            preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
-            enableRemoteModule: false,
-            nodeIntegration: true, // Enable Node.js integration for plugins
+            nodeIntegration: true,
         }
     });
 
-    // Load the loading page first
     mainWindow.loadURL(`file://${path.join(__dirname, 'loading.html')}`);
 
     try {
-        const { server, port } = await startServer();
-        // Load the main page once the server is started
+        const plugins = loadPlugins(); // Load plugins
+        const { port } = await startServer(plugins); // Pass plugins to the server
         mainWindow.loadURL(`http://localhost:${port}`);
     } catch (error) {
         console.error('Error starting server:', error);
-        mainWindow.loadURL(`file://${path.join(__dirname, 'error.html')}`); // Optionally, load an error page
+        mainWindow.loadURL(`file://${path.join(__dirname, 'error.html')}`);
     }
 
-    // Handle external links
     mainWindow.webContents.on('new-window', (event, url) => {
         event.preventDefault();
-        shell.openExternal(url); // Open the URL in the default browser
-    });
-
-    // Clean up resources when the window is closed
-    mainWindow.on('closed', () => {
-        mainWindow = null;
+        shell.openExternal(url);
     });
 }
 
-// Initialize the application
 app.on('ready', createWindow);
-
-// Handle quitting the application
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit();
-    }
+    if (process.platform !== 'darwin') app.quit();
 });
-
-// Recreate the window on macOS when the dock icon is clicked
 app.on('activate', () => {
-    if (mainWindow === null) {
-        createWindow();
-    }
+    if (mainWindow === null) createWindow();
 });

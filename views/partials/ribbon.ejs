@@ -6,10 +6,6 @@
     <%- include("head.ejs") %>
     <title>Ribbon Menu</title>
     <style>
-        /* Your existing styles */
-        main {
-            padding-top: 30px;
-        }
         header.ribbon {
             background-color: #333;
             color: white;
@@ -46,6 +42,9 @@
             transition: background-color 0.3s;
             cursor: pointer;
         }
+        .ribbon-menu a img {
+            margin-right: 8px; /* Add space between icon and text */
+        }
         .ribbon-menu a:hover {
             background-color: #444;
         }
@@ -55,16 +54,17 @@
             background-color: #444;
             top: 100%;
             left: 0;
-            min-width: 150px;
             border-radius: 4px;
             box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
             z-index: 1001;
         }
         .ribbon-menu .dropdown li {
-            border-bottom: 1px solid #555;
             padding: 0 10px;
             display: flex;
             justify-content: space-between;
+            border-bottom: 1px solid #555;
+            min-width: 150px;
+            white-space: nowrap;
         }
         .ribbon-menu .dropdown li:last-child {
             border-bottom: none;
@@ -72,12 +72,15 @@
         .ribbon-menu .dropdown a {
             padding: 10px 0;
             flex-grow: 1;
+            white-space: nowrap;
         }
         .ribbon-menu .dropdown span.shortcut {
             color: #bbb;
             font-size: 0.8rem;
             margin-left: 10px;
-            white-space: nowrap;
+        }
+        main {
+            margin-top: 30px;
         }
     </style>
 </head>
@@ -101,29 +104,29 @@
                 {
                     id: 'file-menu',
                     items: [
-                        { label: 'New Project', shortcut: 'Ctrl+N', action: () => alert("New Project action") },
-                        { label: 'Open Folder', shortcut: 'Ctrl+Shift+O', action: () => alert("Open Folder action") },
-                        { label: 'Settings', shortcut: 'Ctrl+I', action: () => alert("Settings action") }
+                        { label: 'New Project', icon: 'bi bi-plus', shortcut: 'Ctrl+N', action: () => alert("New Project action") },
+                        { label: 'Open Folder', icon: 'bi bi-folder2-open', shortcut: 'Ctrl+Shift+O', action: () => alert("Open Folder action") },
+                        { label: 'Settings', icon: 'bi bi-gear', shortcut: 'Ctrl+I', action: () => alert("Settings action") }
                     ]
                 },
                 {
                     id: 'edit-menu',
                     items: [
-                        { label: 'Copy', shortcut: 'Ctrl+C', action: () => alert("Copy action") },
-                        { label: 'Paste', shortcut: 'Ctrl+V', action: () => alert("Paste action") }
+                        { label: 'Copy', icon: 'bi bi-copy', shortcut: 'Ctrl+C', action: () => alert("Copy action") },
+                        { label: 'Paste', icon: 'bi bi-clipboard', shortcut: 'Ctrl+V', action: () => alert("Paste action") }
                     ]
                 },
                 {
                     id: 'help-menu',
                     items: [
-                        { label: 'Discord', link: 'https://discord.gg/dgzx3Yg4xY' },
-                        { label: 'Create an Issue', link: 'https://github.com/ScriptBlocks/ScriptBlocks/issues/new' }
+                        { label: 'Discord', icon: 'bi bi-discord', link: 'https://discord.gg/dgzx3Yg4xY' },
+                        { label: 'Create an Issue', icon: 'bi bi-github', link: 'https://github.com/ScriptBlocks/ScriptBlocks/issues/new' }
                     ]
                 },
                 {
                     id: 'plugins-menu',
                     items: [
-                        { label: 'Search for Plugins', action: () => alert("Search for Plugins action") }
+                        { label: 'Search for Plugins', icon: 'bi bi-search', action: () => alert("Search for Plugins action") }
                     ]
                 }
             ];
@@ -134,33 +137,44 @@
                 const dropdown = document.createElement('ul');
                 dropdown.classList.add('dropdown');
                 
-                menuItems.find(m => m.id === menuItem.id).items.forEach(option => {
-                    const listItem = document.createElement('li');
-                    const anchor = document.createElement('a');
-                    anchor.textContent = option.label;
+                const selectedMenu = menuItems.find(m => m.id === menuItem.id);
+                if (selectedMenu) {
+                    selectedMenu.items.forEach(option => {
+                        const listItem = document.createElement('li');
+                        const anchor = document.createElement('a');
 
-                    if (option.link) {
-                        anchor.href = option.link;
-                        anchor.target = "_blank";
-                    } else if (option.action) {
-                        anchor.href = "#";
-                        anchor.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            option.action();
-                        });
-                    }
+                        // Add icon and label with spacing
+                        if (option.icon) {
+                            const iconElement = document.createElement('i');
+                            iconElement.className = option.icon;
+                            iconElement.style.marginRight = '8px';
+                            anchor.appendChild(iconElement);
+                        }
+                        anchor.appendChild(document.createTextNode(option.label));
 
-                    listItem.appendChild(anchor);
+                        if (option.link) {
+                            anchor.href = option.link;
+                            anchor.target = "_blank";
+                        } else if (option.action) {
+                            anchor.href = "#";
+                            anchor.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                option.action();
+                            });
+                        }
 
-                    if (option.shortcut) {
-                        const shortcutSpan = document.createElement('span');
-                        shortcutSpan.textContent = option.shortcut;
-                        shortcutSpan.classList.add('shortcut');
-                        listItem.appendChild(shortcutSpan);
-                    }
+                        listItem.appendChild(anchor);
 
-                    dropdown.appendChild(listItem);
-                });
+                        if (option.shortcut) {
+                            const shortcutSpan = document.createElement('span');
+                            shortcutSpan.innerHTML = option.shortcut;
+                            shortcutSpan.classList.add('shortcut');
+                            listItem.appendChild(shortcutSpan);
+                        }
+
+                        dropdown.appendChild(listItem);
+                    });
+                }
 
                 menuItem.parentElement.appendChild(dropdown);
                 dropdown.style.display = 'block';
@@ -179,20 +193,24 @@
                 }
             });
 
-            // Function to inject new dropdowns from plugins
-            window.injectPluginMenu = (pluginName, menuItems) => {
+            window.injectPluginMenu = (pluginName, items) => {
                 const pluginsMenu = menuItems.find(m => m.id === 'plugins-menu');
                 if (pluginsMenu) {
-                    menuItems.push({
-                        id: `${pluginName}-menu`,
-                        items: menuItems
+                    items.forEach(item => {
+                        const newItem = {
+                            label: item.label,
+                            icon: item.icon,
+                            action: item.action || (() => alert(`${item.label} action not defined`)),
+                            shortcut: item.shortcut,
+                            link: item.link
+                        };
+                        pluginsMenu.items.push(newItem);
                     });
 
                     const newMenuItem = document.createElement('li');
                     newMenuItem.innerHTML = `<a id="${pluginName}-menu">${pluginName}</a>`;
                     document.getElementById('menu-items').appendChild(newMenuItem);
 
-                    // Add event listener for the new menu item
                     newMenuItem.querySelector('a').addEventListener('click', (event) => {
                         event.preventDefault();
                         toggleDropdown(newMenuItem);
@@ -200,6 +218,6 @@
                 }
             };
         });
-    </script>    
+    </script>
 </body>
 </html>
