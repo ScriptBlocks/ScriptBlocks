@@ -35,7 +35,9 @@ const startServer = async (plugins) => {
     app.set('view engine', 'ejs');
     app.set('views', path.join(__dirname, 'views'));
     app.use(express.static(path.join(__dirname, 'public')));
-    app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
+    app.use('/bootstrap', express.static(path.join(__dirname, 'node_modules/bootstrap/dist')));
+    app.use('/bootstrap-icons/font', express.static(path.join(__dirname, 'node_modules/bootstrap-icons/font')));
+    app.use('/bootstrap-icons/icons', express.static(path.join(__dirname, 'node_modules/bootstrap-icons/icons')));
 
     // Basic route
     app.get('/', (req, res) => {
