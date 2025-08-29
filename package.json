@@ -47,7 +47,7 @@
   "dependencies": {
     "@xmldom/xmldom": "^0.9.5",
     "@xterm/xterm": "^5.5.0",
-    "blockly": "^11.1.1",
+    "blockly": "^12.3.0",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
     "custom-electron-titlebar": "^4.2.8",
